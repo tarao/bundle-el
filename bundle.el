@@ -183,6 +183,7 @@ The rest of FORM is evaluated after FEATURE is loaded."
   "Install FEATURE and run init script.
 It is the same as `bundle' except that FEATURE is explicitly
 required."
+  (declare (indent defun) (debug t))
   (if (eq (nth 0 args) 'in)
       `(bundle ,feature ,@args)
     `(bundle ,feature ,@(list* 'in feature args))))
