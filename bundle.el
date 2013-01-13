@@ -92,10 +92,15 @@ https://github.com/dimitri/el-get/issues/810 for details."
            (init-file (concat bundle-init-directory
                               (format "%s_%s-%d" package call-site id)))
            (el (concat init-file ".el"))
-           (form (plist-get src :after)))
+           (form (plist-get src :after))
+           (loader load-file-name))
+      (let ((loader-el (concat (file-name-sans-extension loader) ".el")))
+        (when (and (string-match-p "\\.elc$" loader)
+                   (file-exists-p loader-el))
+          (setq loader loader-el)))
       ;; generate .el file
       (when (or (not (file-exists-p el))
-                (file-newer-than-file-p load-file-name el))
+                (file-newer-than-file-p loader el))
         (with-temp-buffer
           (if (listp form)
               (dolist (exp form) (pp exp (current-buffer)))
