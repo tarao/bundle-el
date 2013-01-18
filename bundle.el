@@ -99,6 +99,28 @@ https://github.com/dimitri/el-get/issues/810 for details."
         'http))))
    (t 'elpa)))
 
+(defun bundle-parse-name (sym)
+  (let ((spec (split-string (format "%s" sym) ":")) s)
+    (when (string= (or (nth 0 spec) "") "github") (setq spec (cdr spec)))
+    (cond
+     ((and (> (length spec) 2) (string= (car spec) "gist"))
+      ;; gist:12345:name
+      (let* ((id (nth 1 spec))
+             (name (intern (or (nth 2 spec) id)))
+             (type 'git) (url (format "https://gist.github.com/%s.git" id)))
+        (plist-put (plist-put (plist-put s :name name) :type type) :url url)))
+     ((> (length spec) 1)
+      ;; type:name
+      (let ((name (intern (nth 1 spec))) (type (intern (nth 0 spec))))
+      (plist-put (plist-put s :name name) :type type)))
+     ((= (length (split-string (or (nth 0 spec) "") "/")) 2)
+      ;; user/repository
+      (let ((name (intern (replace-regexp-in-string "/" "-" (nth 0 spec))))
+            (type 'github) (pkgname (nth 0 spec)))
+        (plist-put (plist-put (plist-put s :name name) :type type)
+                   :pkgname pkgname)))
+     (t (plist-put s :name sym)))))
+
 (defun bundle-merge-source (src)
   (let* ((name (el-get-source-name src))
          (source (if (plist-get src :type) nil (el-get-package-def name))))
@@ -226,7 +248,9 @@ property list is pushed to `el-get-sources'.
 The rest of FORM is evaluated after FEATURE is loaded."
   (declare (indent defun) (debug t))
   (let* ((feature (or (and (listp feature) (nth 1 feature)) feature))
-         src require)
+         (src (bundle-parse-name feature)) require)
+    ;; set parsed name
+    (setq feature (plist-get src :name))
     ;; (bundle FEATURE in PACKAGE ...) form
     (when (eq (nth 0 form) 'in)
       (let* ((name (nth 1 form))
@@ -237,8 +261,6 @@ The rest of FORM is evaluated after FEATURE is loaded."
     (while (keywordp (nth 0 form))
       (setq src (plist-put src (nth 0 form) (nth 1 form))
             form (cdr-safe (cdr form))))
-    ;; package name
-    (unless (plist-member src :name) (setq src (plist-put src :name feature)))
     ;; put default type
     (unless (or (plist-member src :type) (bundle-defined-p src))
       (setq src (plist-put src :type (bundle-guess-type src))))
@@ -265,7 +287,9 @@ required."
   (declare (indent defun) (debug t))
   (if (eq (nth 0 args) 'in)
       `(bundle ,feature ,@args)
-    `(bundle ,feature ,@(list* 'in feature args))))
+    (let* ((feature (or (and (listp feature) (nth 1 feature)) feature))
+           (name (plist-get (bundle-parse-name feature) :name)))
+      `(bundle ,feature ,@(list* 'in name args)))))
 
 (defun bundle-update (&rest packages)
   "Update PACKAGES.
