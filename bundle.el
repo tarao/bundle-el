@@ -27,6 +27,8 @@
 (require 'el-get)
 (eval-when-compile (require 'cl))
 
+;; customization
+
 (defgroup bundle nil "bundle"
   :group 'convenience)
 
@@ -45,9 +47,7 @@
   :type 'boolean
   :group 'bundle)
 
-(defvar bundle-inits nil)
-(defvar bundle-loader-alist nil)
-(defvar bundle-updates nil)
+;; patches
 
 ;; patch for el-get
 (defadvice el-get-update-autoloads
@@ -63,10 +63,16 @@ https://github.com/dimitri/el-get/issues/810 for details."
 ;; patch for init-loader
 (add-hook 'init-loader-before-compile-hook #'bundle-silent-load)
 
-(defsubst bundle-load-file-el ()
-  (and load-file-name
-       (concat (file-name-sans-extension (expand-file-name load-file-name))
-               ".el")))
+;; internals
+
+(defvar bundle-inits nil)
+(defvar bundle-loader-alist nil)
+(defvar bundle-updates nil)
+
+(defsubst bundle-load-file-el (&optional file)
+  (let ((file (or file load-file-name)))
+    (and file
+         (replace-regexp-in-string "\\.elc$" ".el" (expand-file-name file)))))
 
 (defun bundle-package-def (src)
   (condition-case nil
@@ -179,20 +185,37 @@ https://github.com/dimitri/el-get/issues/810 for details."
         (setq def (plist-put def :after `(progn ,@form)))))
 
     ;; record dependencies of init files
-    (let* ((pair (or (assoc package bundle-loader-alist) (cons package nil)))
-           (loaders (cdr pair))
-           (loader (bundle-load-file-el)))
-      (setq bundle-loader-alist (delq pair bundle-loader-alist))
-      (when (and loader (file-exists-p loader))
-        (add-to-list 'loaders loader))
-      (setcdr pair loaders)
-      (add-to-list 'bundle-loader-alist pair))
+    (bundle-register-callsite package)
 
     ;; get
     (add-to-list 'el-get-sources def)
     (prog1 (el-get sync package)
       ;; prevent :after from running twice
       (plist-put def :after nil))))
+
+(defun bundle-post-update (package)
+  "Post update process for PACKAGE.
+Touch files that contain \"(bundle PACKAGE ...)\" so that the
+file becomes newer than its byte-compiled version."
+  (dolist (file (cdr (assoc-string package bundle-loader-alist)))
+    (when (file-exists-p file)
+      (call-process "touch" nil nil nil file)))
+  (when bundle-updates
+    (setq bundle-updates (delq package bundle-updates))
+    (when (and (null bundle-updates) bundle-reload-user-init-file)
+      (setq bundle-inits nil bundle-loader-alist nil)
+      (load user-init-file)
+      (run-hooks 'after-init-hook))))
+(add-hook 'el-get-post-update-hooks #'bundle-post-update)
+
+(defun bundle-silent-load (file)
+  (with-temp-buffer
+    (let ((byte-compile-log-buffer (buffer-name))
+          (inits bundle-inits))
+      (load file)
+      (setq bundle-inits inits))))
+
+;; commands
 
 (defmacro bundle (feature &rest form)
   "Install FEATURE and run init script specified by FORM.
@@ -244,21 +267,6 @@ required."
       `(bundle ,feature ,@args)
     `(bundle ,feature ,@(list* 'in feature args))))
 
-(defun bundle-post-update (package)
-  "Post update process for PACKAGE.
-Touch files that contain \"(bundle PACKAGE ...)\" so that the
-file becomes newer than its byte-compiled version."
-  (dolist (file (cdr (assoc-string package bundle-loader-alist)))
-    (when (file-exists-p file)
-      (call-process "touch" nil nil nil file)))
-  (when bundle-updates
-    (setq bundle-updates (delq package bundle-updates))
-    (when (and (null bundle-updates) bundle-reload-user-init-file)
-      (setq bundle-inits nil bundle-loader-alist nil)
-      (load user-init-file)
-      (run-hooks 'after-init-hook))))
-(add-hook 'el-get-post-update-hooks #'bundle-post-update)
-
 (defun bundle-update (&rest packages)
   "Update PACKAGES.
 If PACKAGES is nil, then update all installed packages.  If
@@ -271,12 +279,16 @@ is reloaded after all the updates."
     (setq bundle-updates (el-get-list-package-names-with-status "installed"))
     (el-get-update-all t)))
 
-(defun bundle-silent-load (file)
-  (with-temp-buffer
-    (let ((byte-compile-log-buffer (buffer-name))
-          (inits bundle-inits))
-      (load file)
-      (setq bundle-inits inits))))
+(defun bundle-register-callsite (package &optional callsite)
+  "Declare that PACKAGE update causes CALLSITE to require being loaded again."
+  (let* ((pair (or (assoc package bundle-loader-alist) (cons package nil)))
+         (loaders (cdr pair))
+         (loader (bundle-load-file-el callsite)))
+    ;; (setq bundle-loader-alist (delq pair bundle-loader-alist))
+    (when (and loader (file-exists-p loader))
+      (add-to-list 'loaders loader))
+    (setcdr pair loaders)
+    (add-to-list 'bundle-loader-alist pair)))
 
 (provide 'bundle)
 ;;; bundle.el ends here
