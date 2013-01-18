@@ -49,7 +49,7 @@
 (defvar bundle-loader-alist nil)
 (defvar bundle-updates nil)
 
-;; patch
+;; patch for el-get
 (defadvice el-get-update-autoloads
   (around bundle-respect-autoloads (package) activate)
   "Suppress generating autoloads if \":autoloads nil\" is specified.
@@ -59,6 +59,9 @@ https://github.com/dimitri/el-get/issues/810 for details."
     (unless (and (plist-member def :autoloads)
                  (not (plist-get def :autoloads)))
       ad-do-it)))
+
+;; patch for init-loader
+(add-hook 'init-loader-before-compile-hook #'bundle-silent-load)
 
 (defsubst bundle-load-file-el ()
   (and load-file-name
@@ -267,6 +270,13 @@ is reloaded after all the updates."
       (mapc #'el-get-update packages)
     (setq bundle-updates (el-get-list-package-names-with-status "installed"))
     (el-get-update-all t)))
+
+(defun bundle-silent-load (file)
+  (with-temp-buffer
+    (let ((byte-compile-log-buffer (buffer-name))
+          (inits bundle-inits))
+      (load file)
+      (setq bundle-inits inits))))
 
 (provide 'bundle)
 ;;; bundle.el ends here
