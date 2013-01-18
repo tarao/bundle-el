@@ -255,7 +255,7 @@ The rest of FORM is evaluated after FEATURE is loaded."
     (when (eq (nth 0 form) 'in)
       (let* ((name (nth 1 form))
              (name (or (and (listp name) (nth 1 name)) name)))
-        (setq src (plist-put src :name name)))
+        (setq src (bundle-parse-name name)))
       (setq form (nthcdr 2 form) require t))
     ;; parse keywords
     (while (keywordp (nth 0 form))
@@ -289,7 +289,7 @@ required."
       `(bundle ,feature ,@args)
     (let* ((feature (or (and (listp feature) (nth 1 feature)) feature))
            (name (plist-get (bundle-parse-name feature) :name)))
-      `(bundle ,feature ,@(list* 'in name args)))))
+      `(bundle ,name ,@(list* 'in feature args)))))
 
 (defun bundle-update (&rest packages)
   "Update PACKAGES.
