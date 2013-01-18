@@ -115,7 +115,7 @@ https://github.com/dimitri/el-get/issues/810 for details."
       (plist-put (plist-put s :name name) :type type)))
      ((= (length (split-string (or (nth 0 spec) "") "/")) 2)
       ;; user/repository
-      (let ((name (intern (replace-regexp-in-string "/" "-" (nth 0 spec))))
+      (let ((name (intern (replace-regexp-in-string "^.*/" "" (nth 0 spec))))
             (type 'github) (pkgname (nth 0 spec)))
         (plist-put (plist-put (plist-put s :name name) :type type)
                    :pkgname pkgname)))
