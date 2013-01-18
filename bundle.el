@@ -61,6 +61,10 @@ https://github.com/dimitri/el-get/issues/810 for details."
       ad-do-it)))
 
 ;; patch for init-loader
+(defun bundle-silent-load (file)
+  (let ((inits bundle-inits))
+    (load file t)
+    (setq bundle-inits inits)))
 (add-hook 'init-loader-before-compile-hook #'bundle-silent-load)
 
 ;; internals
@@ -229,13 +233,6 @@ file becomes newer than its byte-compiled version."
       (load user-init-file)
       (run-hooks 'after-init-hook))))
 (add-hook 'el-get-post-update-hooks #'bundle-post-update)
-
-(defun bundle-silent-load (file)
-  (with-temp-buffer
-    (let ((byte-compile-log-buffer (buffer-name))
-          (inits bundle-inits))
-      (load file)
-      (setq bundle-inits inits))))
 
 ;; commands
 
