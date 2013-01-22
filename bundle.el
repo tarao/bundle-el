@@ -305,7 +305,6 @@ is reloaded after all the updates."
   (let* ((pair (or (assoc package bundle-loader-alist) (cons package nil)))
          (loaders (cdr pair))
          (loader (bundle-load-file-el callsite)))
-    ;; (setq bundle-loader-alist (delq pair bundle-loader-alist))
     (when (and loader (file-exists-p loader))
       (add-to-list 'loaders loader))
     (setcdr pair loaders)
