@@ -37,7 +37,8 @@
   :type 'boolean
   :group 'bundle)
 
-(defcustom bundle-init-directory "~/.emacs.d/bundle/init/"
+(defcustom bundle-init-directory
+  (concat (file-name-as-directory user-emacs-directory) "bundle/init/")
   "Directory to save auto generated init files."
   :type 'directory
   :group 'bundle)
