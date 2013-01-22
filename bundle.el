@@ -183,6 +183,7 @@ https://github.com/dimitri/el-get/issues/810 for details."
       ;; loader
       `((bundle-load-init ,el)))))
 
+;;;###autoload
 (defun bundle-el-get (src)
   (let ((package (plist-get src :name)) (def (bundle-package-def src))
         (fs (plist-get src :features)) (sync 'sync))
@@ -236,6 +237,7 @@ file becomes newer than its byte-compiled version."
 
 ;; commands
 
+;;;###autoload
 (defmacro bundle (feature &rest form)
   "Install FEATURE and run init script specified by FORM.
 
@@ -277,6 +279,7 @@ The rest of FORM is evaluated after FEATURE is loaded."
 
     `(bundle-el-get ',src)))
 
+;;;###autoload
 (defmacro bundle! (feature &rest args)
   "Install FEATURE and run init script.
 It is the same as `bundle' except that FEATURE is explicitly
@@ -288,6 +291,7 @@ required."
            (name (plist-get (bundle-parse-name feature) :name)))
       `(bundle ,name ,@(list* 'in feature args)))))
 
+;;;###autoload
 (defun bundle-update (&rest packages)
   "Update PACKAGES.
 If PACKAGES is nil, then update all installed packages.  If
@@ -300,6 +304,7 @@ is reloaded after all the updates."
     (setq bundle-updates (el-get-list-package-names-with-status "installed"))
     (el-get-update-all t)))
 
+;;;###autoload
 (defun bundle-register-callsite (package &optional callsite)
   "Declare that PACKAGE update causes CALLSITE to require being loaded again."
   (let* ((pair (or (assoc package bundle-loader-alist) (cons package nil)))
