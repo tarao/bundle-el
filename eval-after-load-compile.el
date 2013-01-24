@@ -30,14 +30,16 @@
 (defmacro eval-after-load-compile (feature &rest form)
   (declare (indent defun))
   (let ((feat (if (and (listp feature) (eq (nth 0 feature) 'quote))
-                  (nth 1 feature) feature)))
+                  (nth 1 feature) feature)) loaded)
     (eval '(eval-when (compile)
-             ;; don't eval after-loads during compilation
-             (let ((after-load-alist nil))
-               (cond ((stringp feat) (load feat t))
-                     ((symbolp feat) (require feat nil t))))))
-    (if (cond ((stringp feat) (locate-library feat))
-              ((symbolp feat) (featurep feat)))
+             (setq loaded
+                   (condition-case ()
+                       ;; don't eval after-loads during compilation
+                       (let ((after-load-alist nil))
+                         (cond ((stringp feat) (load feat))
+                               ((symbolp feat) (require feat))))
+                     (error nil)))))
+    (if loaded
         ;; byte-compiled version
         `(eval-after-load ,feature
            '(funcall ,(byte-compile `(lambda () ,@form))))
