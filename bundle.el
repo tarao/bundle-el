@@ -48,6 +48,17 @@
   :type 'boolean
   :group 'bundle)
 
+(defvar bundle-inits nil)
+(defvar bundle-loader-alist nil)
+(defvar bundle-updates nil)
+
+(defconst bundle-gist-url-type-plist
+  (list 'http "http://gist.github.com/%s.git"
+        'https "https://gist.github.com/%s.git"
+        'git "git://gist.github.com/%s.git"
+        'ssh "git@gist.github.com:%s.git")
+  "Plist mapping Gist types to their URL format strings.")
+
 ;; patches
 
 ;; patch for el-get
@@ -70,9 +81,11 @@ https://github.com/dimitri/el-get/issues/810 for details."
 
 ;; internals
 
-(defvar bundle-inits nil)
-(defvar bundle-loader-alist nil)
-(defvar bundle-updates nil)
+(defsubst bundle-gist-url (id &optional src)
+  (let* ((type (or (plist-get src :url-type) el-get-github-default-url-type))
+         (str (or (plist-get bundle-gist-url-type-plist type)
+                  (plist-get bundle-gist-url-type-plist 'http))))
+    (format str id)))
 
 (defsubst bundle-load-file-el (&optional file)
   (let ((file (or file load-file-name)))
@@ -112,7 +125,7 @@ https://github.com/dimitri/el-get/issues/810 for details."
       ;; gist:12345:name
       (let* ((id (nth 1 spec))
              (name (intern (or (nth 2 spec) id)))
-             (type 'git) (url (format "https://gist.github.com/%s.git" id)))
+             (type 'git) (url (bundle-gist-url id)))
         (plist-put (plist-put (plist-put s :name name) :type type) :url url)))
      ((> (length spec) 1)
       ;; type:name
