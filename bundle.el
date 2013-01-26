@@ -239,14 +239,15 @@ https://github.com/dimitri/el-get/issues/810 for details."
 Touch files that contain \"(bundle PACKAGE ...)\" so that the
 file becomes newer than its byte-compiled version."
   (dolist (file (cdr (assoc-string package bundle-loader-alist)))
-    (when (file-exists-p file)
+    (when (and file (file-exists-p file))
       (call-process "touch" nil nil nil file)))
   (when bundle-updates
     (setq bundle-updates (delq package bundle-updates))
     (when (and (null bundle-updates) bundle-reload-user-init-file)
       (setq bundle-inits nil bundle-loader-alist nil)
-      (load user-init-file)
-      (run-hooks 'after-init-hook))))
+      (when (stringp user-init-file)
+        (load user-init-file)
+        (run-hooks 'after-init-hook)))))
 (add-hook 'el-get-post-update-hooks #'bundle-post-update)
 
 ;; commands
