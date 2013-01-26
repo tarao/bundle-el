@@ -312,12 +312,20 @@ required."
 If PACKAGES is nil, then update all installed packages.  If
 `bundle-reload-user-init-file' is non-nil, then `user-init-file'
 is reloaded after all the updates."
-  (interactive)
+  (interactive "SPackage: ")
   (setq bundle-updates packages)
   (if packages
       (mapc #'el-get-update packages)
     (setq bundle-updates (el-get-list-package-names-with-status "installed"))
     (el-get-update-all t)))
+
+;;;###autoload
+(defun bundle-update-all ()
+  "Update all installed packages.
+If `bundle-reload-user-init-file' is non-nil, then
+`user-init-file' is reloaded after all the updates."
+  (interactive)
+  (bundle-update))
 
 ;;;###autoload
 (defun bundle-register-callsite (package &optional callsite)
