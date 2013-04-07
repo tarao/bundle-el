@@ -165,7 +165,7 @@ modifiers.
 `t` means to automatically byte-compile configuration forms.
 
 Unless this option is set to `t`, nothing is saved to
-`bundle-init-directory` and configurations forms are passed as
+`bundle-init-directory` and configuration forms are passed as
 `:after` script of the package source definition.
 
 The default value is `t`.
