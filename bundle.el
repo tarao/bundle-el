@@ -48,6 +48,7 @@
   :type 'boolean
   :group 'bundle)
 
+(defvar bundle-sources nil)
 (defvar bundle-inits nil)
 (defvar bundle-loader-alist nil)
 (defvar bundle-updates nil)
@@ -228,11 +229,20 @@ https://github.com/dimitri/el-get/issues/810 for details."
     ;; record dependencies of init files
     (bundle-register-callsite package)
 
-    ;; get
-    (add-to-list 'el-get-sources def)
-    (prog1 (el-get sync package)
-      ;; prevent :after from running twice
-      (plist-put def :after nil))))
+    (let ((toplevel (null bundle-sources)))
+      ;; save sources to global variable
+      (when toplevel (setq bundle-sources el-get-sources))
+      (add-to-list 'bundle-sources def)
+
+      ;; get
+      (prog1 (let ((el-get-sources bundle-sources)) (el-get sync package))
+        ;; prevent :after from running twice
+        (plist-put def :after nil)
+
+        ;; apply changes of sources to `el-get-sources' variable
+        (when toplevel
+          (setq el-get-sources bundle-sources
+                bundle-sources nil))))))
 
 (defun bundle-post-update (package)
   "Post update process for PACKAGE.
