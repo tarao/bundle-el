@@ -1,8 +1,4 @@
 (progn
-  ;; Add `el-get' to the load path
-  (unless (boundp 'bundle-no-el-get-load-path)
-    (add-to-list 'load-path (locate-user-emacs-file "el-get/el-get")))
-
   ;; Install `el-get'
   (unless (require 'el-get nil 'noerror)
     (with-current-buffer
