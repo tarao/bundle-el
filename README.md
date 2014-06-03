@@ -12,24 +12,20 @@
 
 ## Installation
 
-1. Install [el-get][]
-2. Install bundle.el by el-get
+Put the following code in your Emacs init file (e.g. ~/.emacs.d/init.el).
 
 ```lisp
-;; Install el-get as usual
-(add-to-list 'load-path "~/.emacs.d/el-get/el-get")
-(unless (require 'el-get nil 'noerror)
-  (with-current-buffer
-      (url-retrieve-synchronously
-       "http://raw.github.com/dimitri/el-get/master/el-get-install.el")
-    (let (el-get-master-branch)
+;; Add `el-get' and `bundle' to the load path
+(dolist (dir '(el-get bundle))
+  (add-to-list 'load-path (locate-user-emacs-file (format "el-get/%s" dir))))
+
+(unless (require 'bundle nil 'noerror)
+  (let (el-get-master-branch)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "http://raw.github.com/tarao/bundle-el/installer/bundle-install.el")
       (goto-char (point-max))
       (eval-print-last-sexp))))
-
-;; Install bundle
-(add-to-list 'el-get-sources
-             '(:name bundle :type github :pkgname "tarao/bundle-el"))
-(el-get 'sync 'bundle)
 ```
 
 ## Case Studies
