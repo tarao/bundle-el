@@ -1,4 +1,4 @@
-;;; eval-after-load-compile.el --- Compiling version of eval-after-load
+;;; el-get-eval-after-load-compile.el --- Compiling version of eval-after-load
 
 ;; Author: INA Lintaro <tarao.gnn at gmail.com>
 ;; URL: https://gist.github.com/4414304.git
@@ -27,7 +27,7 @@
 (eval '(eval-when-compile (require 'cl)))
 
 ;;;###autoload
-(defmacro eval-after-load-compile (feature &rest form)
+(defmacro el-get-eval-after-load-compile (feature &rest form)
   (declare (indent defun))
   (let ((feat (if (and (listp feature) (eq (nth 0 feature) 'quote))
                   (nth 1 feature) feature)) loaded)
@@ -46,5 +46,5 @@
       ;; normal version
       `(eval-after-load ,feature '(progn ,@form)))))
 
-(provide 'eval-after-load-compile)
-;;; eval-after-load-compile.el ends here
+(provide 'el-get-eval-after-load-compile)
+;;; el-get-eval-after-load-compile.el ends here
