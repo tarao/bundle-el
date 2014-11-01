@@ -38,7 +38,7 @@
   :group 'el-get-bundle)
 
 (defcustom el-get-bundle-init-directory
-  (expand-file-name "bundle-init" el-get-dir)
+  (expand-file-name "bundle-init/" el-get-dir)
   "Directory to save auto generated init files."
   :type 'directory
   :group 'el-get-bundle)
