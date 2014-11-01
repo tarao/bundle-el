@@ -160,96 +160,96 @@ modifiers.
 
 ### Customization
 
-#### `bundle-byte-compile` : boolean
+- `bundle-byte-compile` : boolean
 
-`t` means to automatically byte-compile configuration forms.
+  `t` means to automatically byte-compile configuration forms.
 
-Unless this option is set to `t`, nothing is saved to
-`bundle-init-directory` and configuration forms are passed as
-`:after` script of the package source definition.
+  Unless this option is set to `t`, nothing is saved to
+  `bundle-init-directory` and configuration forms are passed as
+  `:after` script of the package source definition.
 
-The default value is `t`.
+  The default value is `t`.
 
-#### `bundle-init-directory` : directory
+- `bundle-init-directory` : directory
 
-Directory to save auto generated files for configurations.
+  Directory to save auto generated files for configurations.
 
-The default value is `~/.emacs.d/bundle/init/`.
+  The default value is `~/.emacs.d/bundle/init/`.
 
-#### `bundle-reload-user-init-file` : boolean
+- `bundle-reload-user-init-file` : boolean
 
-`t` means to reload `user-init-file` (such as `~/.emacs` or
-`~/.emacs.d/init.el`) when a package is updated by `bundle-update` or
-`bundle-update-all`.
+  `t` means to reload `user-init-file` (such as `~/.emacs` or
+  `~/.emacs.d/init.el`) when a package is updated by `bundle-update` or
+  `bundle-update-all`.
 
-The default value is `t`.
+  The default value is `t`.
 
 ### Macros
 
-#### `bundle` ( *package* [ *keywords* ] [ *form*... ] )
+- `bundle` ( *package* [ *keywords* ] [ *form*... ] )
 
-Install *package* with options *keywords* and run configuration
-*form*.
+  Install *package* with options *keywords* and run configuration
+  *form*.
 
-*keywords* are elements of a property list whose keys are symbols
-whose names start with `:`.  See the documentation of `el-get-sources`
-for the meanings of the keys.
+  *keywords* are elements of a property list whose keys are symbols
+  whose names start with `:`.  See the documentation of `el-get-sources`
+  for the meanings of the keys.
 
-After the *package* is installed, the *form* is evaluated.  When
-`bundle-byte-compile` is `t`, the *form* is saved to a file in
-`bundle-init-directory` and compiled.
+  After the *package* is installed, the *form* is evaluated.  When
+  `bundle-byte-compile` is `t`, the *form* is saved to a file in
+  `bundle-init-directory` and compiled.
 
-#### `bundle!` ( *package* [ *keywords* ] [ *form*... ] )
+- `bundle!` ( *package* [ *keywords* ] [ *form*... ] )
 
-Install and `require` *package* with options *keywords* and run
-configuration *form*.  It is equivalent to `bundle` except that it
-`require`s the *package*.
+  Install and `require` *package* with options *keywords* and run
+  configuration *form*.  It is equivalent to `bundle` except that it
+  `require`s the *package*.
 
-#### `eval-after-load-compile` ( *package* *form*... )
+- `eval-after-load-compile` ( *package* *form*... )
 
-Arrange that if *package* is loaded, *form* will be run immediately
-afterwards.  This is equivalent to `eval-after-load` except two
-differences:
-* You don't have to quote *form*.
-* *form* is compiled when `eval-after-load-compile` macro is compiled.
+  Arrange that if *package* is loaded, *form* will be run immediately
+  afterwards.  This is equivalent to `eval-after-load` except two
+  differences:
+  * You don't have to quote *form*.
+  * *form* is compiled when `eval-after-load-compile` macro is compiled.
 
-*form* is compiled as a function body by the following code.
-```lisp
-(byte-compile `(lambda () ,@form))
-```
+  *form* is compiled as a function body by the following code.
+  ```lisp
+  (byte-compile `(lambda () ,@form))
+  ```
 
-When `eval-after-load-compile` macro call is compiled, the *package*
-is loaded only for that time to make sure that functions and variables
-in the *package* are defined.
+  When `eval-after-load-compile` macro call is compiled, the *package*
+  is loaded only for that time to make sure that functions and variables
+  in the *package* are defined.
 
 ### Commands
 
-#### `bundle-update` ( *package*... )
+- `bundle-update` ( *package*... )
 
-Update *package*.  If `bundle-reload-user-init-file` is `t`,
-`user-init-file` (such as `~/.emacs` or `~/.emacs.d/init.el`) is
-reloaded after the *package* update.
+  Update *package*.  If `bundle-reload-user-init-file` is `t`,
+  `user-init-file` (such as `~/.emacs` or `~/.emacs.d/init.el`) is
+  reloaded after the *package* update.
 
-#### `bundle-update-all` ( )
+- `bundle-update-all` ( )
 
-Update all installed packages.  If `bundle-reload-user-init-file` is
-`t`, `user-init-file` (such as `~/.emacs` or `~/.emacs.d/init.el`) is
-reloaded after all package updates.
+  Update all installed packages.  If `bundle-reload-user-init-file` is
+  `t`, `user-init-file` (such as `~/.emacs` or `~/.emacs.d/init.el`) is
+  reloaded after all package updates.
 
 ### Functions
 
-#### `bundle-register-callsite` ( *package* [ *callsite* ] )
+- `bundle-register-callsite` ( *package* [ *callsite* ] )
 
-Declare that *package* update causes *callsite* (a file) to require
-being loaded again.
+  Declare that *package* update causes *callsite* (a file) to require
+  being loaded again.
 
-This **DOES NOT** mean that `bundle-update` reload the *callsite* but
-configuration forms in the *callsite* will be recompiled next time
-they are evaluated.
+  This **DOES NOT** mean that `bundle-update` reload the *callsite* but
+  configuration forms in the *callsite* will be recompiled next time
+  they are evaluated.
 
-The registration is automatically done in `bundle` macro.  You have to
-use this function if you want to recompile your configuration when
-some other package installed in some other file is updated.
+  The registration is automatically done in `bundle` macro.  You have to
+  use this function if you want to recompile your configuration when
+  some other package installed in some other file is updated.
 
 ## Acknowledgment
 
