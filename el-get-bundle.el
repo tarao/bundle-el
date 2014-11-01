@@ -1,4 +1,4 @@
-;;; bundle.el --- An el-get wrapper
+;;; el-get-bundle.el --- An el-get wrapper
 
 ;; Author: INA Lintaro <tarao.gnn at gmail.com>
 ;; URL: https://gist.github.com/4414297
@@ -29,31 +29,31 @@
 
 ;; customization
 
-(defgroup bundle nil "bundle"
-  :group 'convenience)
+(defgroup el-get-bundle nil "el-get-bundle"
+  :group 'el-get)
 
-(defcustom bundle-byte-compile t
+(defcustom el-get-bundle-byte-compile t
   "t means to automatically byte-compile init forms."
   :type 'boolean
-  :group 'bundle)
+  :group 'el-get-bundle)
 
-(defcustom bundle-init-directory
-  (concat (file-name-as-directory user-emacs-directory) "bundle/init/")
+(defcustom el-get-bundle-init-directory
+  (expand-file-name "bundle-init" el-get-dir)
   "Directory to save auto generated init files."
   :type 'directory
-  :group 'bundle)
+  :group 'el-get-bundle)
 
-(defcustom bundle-reload-user-init-file t
+(defcustom el-get-bundle-reload-user-init-file t
   "Reload `user-init-file' when a package is updated."
   :type 'boolean
-  :group 'bundle)
+  :group 'el-get-bundle)
 
-(defvar bundle-sources nil)
-(defvar bundle-inits nil)
-(defvar bundle-loader-alist nil)
-(defvar bundle-updates nil)
+(defvar el-get-bundle-sources nil)
+(defvar el-get-bundle-inits nil)
+(defvar el-get-bundle-loader-alist nil)
+(defvar el-get-bundle-updates nil)
 
-(defconst bundle-gist-url-type-plist
+(defconst el-get-bundle-gist-url-type-plist
   (list 'http "http://gist.github.com/%s.git"
         'https "https://gist.github.com/%s.git"
         'git "git://gist.github.com/%s.git"
@@ -62,44 +62,33 @@
 
 ;; patches
 
-;; patch for el-get
-(defadvice el-get-update-autoloads
-  (around bundle-respect-autoloads (package) activate)
-  "Suppress generating autoloads if \":autoloads nil\" is specified.
-This is a bug in el-get and will be fixed in 5.0. See
-https://github.com/dimitri/el-get/issues/810 for details."
-  (let ((def (el-get-package-def package)))
-    (unless (and (plist-member def :autoloads)
-                 (not (plist-get def :autoloads)))
-      ad-do-it)))
-
 ;; patch for init-loader
-(defun bundle-silent-load (file)
-  (let ((inits bundle-inits))
+(defun el-get-bundle-silent-load (file)
+  (let ((inits el-get-bundle-inits))
     (load file t)
-    (setq bundle-inits inits)))
-(add-hook 'init-loader-before-compile-hook #'bundle-silent-load)
+    (setq el-get-bundle-inits inits)))
+(add-hook 'init-loader-before-compile-hook #'el-get-bundle-silent-load)
 
 ;; internals
 
-(defsubst bundle-gist-url (id &optional src)
+(defsubst el-get-bundle-gist-url (id &optional src)
   (let* ((type (or (plist-get src :url-type) el-get-github-default-url-type))
-         (str (or (plist-get bundle-gist-url-type-plist type)
-                  (plist-get bundle-gist-url-type-plist 'http))))
+         (str (or (plist-get el-get-bundle-gist-url-type-plist type)
+                  (plist-get el-get-bundle-gist-url-type-plist 'http))))
     (format str id)))
 
-(defsubst bundle-load-file-el (&optional file)
+(defsubst el-get-bundle-load-file-el (&optional file)
   (let ((file (or file load-file-name)))
     (and file
          (replace-regexp-in-string "\\.elc$" ".el" (expand-file-name file)))))
 
-(defun bundle-package-def (src)
+(defun el-get-bundle-package-def (src)
   (condition-case nil
       (el-get-package-def (if (listp src) (el-get-source-name src) src))
     (error nil)))
-(defalias 'bundle-defined-p (symbol-function 'bundle-package-def))
+(defalias 'el-get-bundle-defined-p (symbol-function 'el-get-bundle-package-def))
 
-(defun bundle-guess-type (src)
+(defun el-get-bundle-guess-type (src)
   (cond
    ((plist-member src :url)
     (let ((url (plist-get src :url)))
@@ -118,7 +107,7 @@ https://github.com/dimitri/el-get/issues/810 for details."
         'http))))
    (t 'elpa)))
 
-(defun bundle-parse-name (sym)
+(defun el-get-bundle-parse-name (sym)
   (let ((spec (split-string (format "%s" sym) ":")) s)
     (when (string= (or (nth 0 spec) "") "github") (setq spec (cdr spec)))
     (cond
@@ -126,7 +115,7 @@ https://github.com/dimitri/el-get/issues/810 for details."
       ;; gist:12345:name
       (let* ((id (nth 1 spec))
              (name (intern (or (nth 2 spec) id)))
-             (type 'git) (url (bundle-gist-url id)))
+             (type 'git) (url (el-get-bundle-gist-url id)))
         (plist-put (plist-put (plist-put s :name name) :type type) :url url)))
      ((> (length spec) 1)
       ;; type:name
@@ -140,7 +129,7 @@ https://github.com/dimitri/el-get/issues/810 for details."
                    :pkgname pkgname)))
      (t (plist-put s :name sym)))))
 
-(defun bundle-merge-source (src)
+(defun el-get-bundle-merge-source (src)
   (let* ((name (el-get-source-name src))
          (source (if (plist-get src :type) nil (el-get-package-def name))))
     (while (keywordp (nth 0 src))
@@ -148,15 +137,15 @@ https://github.com/dimitri/el-get/issues/810 for details."
             src (cdr-safe (cdr src))))
     source))
 
-(defun bundle-init-id (&rest args)
+(defun el-get-bundle-init-id (&rest args)
   (let* ((key (mapconcat #'(lambda (x) (format "%s" x)) args ";"))
-         (pair (assoc key bundle-inits)))
+         (pair (assoc key el-get-bundle-inits)))
     (if pair
         (setcdr pair (1+ (cdr pair)))
-      (push (cons key 1) bundle-inits)
+      (push (cons key 1) el-get-bundle-inits)
       1)))
 
-(defun bundle-load-init (el)
+(defun el-get-bundle-load-init (el)
   (let ((lib (file-name-sans-extension el))
         (elc (concat el "c")))
     (when (or (not (file-exists-p elc))
@@ -164,20 +153,20 @@ https://github.com/dimitri/el-get/issues/810 for details."
       (byte-compile-file el))
     (load (expand-file-name lib))))
 
-(defun bundle-make-init (src)
-  (when (and bundle-byte-compile
+(defun el-get-bundle-make-init (src)
+  (when (and el-get-bundle-byte-compile
              (plist-get src :after)
              load-file-name
              (condition-case nil
-                 (or (file-exists-p bundle-init-directory)
-                     (make-directory bundle-init-directory t) t)
+                 (or (file-exists-p el-get-bundle-init-directory)
+                     (make-directory el-get-bundle-init-directory t) t)
                (error nil)))
     (let* ((path (file-name-sans-extension (expand-file-name load-file-name)))
            (path (split-string path "/"))
            (call-site (mapconcat #'identity path "_"))
            (package (plist-get src :name))
-           (id (bundle-init-id package call-site))
-           (init-file (concat bundle-init-directory
+           (id (el-get-bundle-init-id package call-site))
+           (init-file (concat el-get-bundle-init-directory
                               (format "%s_%s-%d" package call-site id)))
            (el (concat init-file ".el"))
            (form (plist-get src :after))
@@ -196,11 +185,11 @@ https://github.com/dimitri/el-get/issues/810 for details."
           (write-region nil nil el)))
 
       ;; loader
-      `((bundle-load-init ,el)))))
+      `((el-get-bundle-load-init ,el)))))
 
 ;;;###autoload
-(defun bundle-el-get (src)
-  (let ((package (plist-get src :name)) (def (bundle-package-def src))
+(defun el-get-bundle-el-get (src)
+  (let ((package (plist-get src :name)) (def (el-get-bundle-package-def src))
         (fs (plist-get src :features)) (sync 'sync))
     ;; merge features
     (when (plist-member def :features)
@@ -209,7 +198,7 @@ https://github.com/dimitri/el-get/issues/810 for details."
         (dolist (f old) (add-to-list 'fs f))
         (setq src (plist-put src :features fs))))
     ;; merge src with the oriiginal definition
-    (setq def (bundle-merge-source src))
+    (setq def (el-get-bundle-merge-source src))
 
     ;; entering password via process-filter only works in async mode
     (when (or (and (eq (plist-get def :type) 'cvs)
@@ -222,48 +211,49 @@ https://github.com/dimitri/el-get/issues/810 for details."
       (setq sync nil))
 
     ;; byte-compile :after script
-    (let ((form  (or (bundle-make-init def) (plist-get def :after))))
+    (let ((form  (or (el-get-bundle-make-init def) (plist-get def :after))))
       (when form
         (setq def (plist-put def :after `(progn ,@form)))))
 
     ;; record dependencies of init files
-    (bundle-register-callsite package)
+    (el-get-bundle-register-callsite package)
 
-    (let ((toplevel (null bundle-sources)))
+    (let ((toplevel (null el-get-bundle-sources)))
       ;; save sources to global variable
-      (when toplevel (setq bundle-sources el-get-sources))
-      (add-to-list 'bundle-sources def)
+      (when toplevel (setq el-get-bundle-sources el-get-sources))
+      (add-to-list 'el-get-bundle-sources def)
 
       ;; get
-      (prog1 (let ((el-get-sources bundle-sources)) (el-get sync package))
+      (prog1 (let ((el-get-sources el-get-bundle-sources))
+               (el-get sync package))
         ;; prevent :after from running twice
         (plist-put def :after nil)
 
         ;; apply changes of sources to `el-get-sources' variable
         (when toplevel
-          (setq el-get-sources bundle-sources
-                bundle-sources nil))))))
+          (setq el-get-sources el-get-bundle-sources
+                el-get-bundle-sources nil))))))
 
-(defun bundle-post-update (package)
+(defun el-get-bundle-post-update (package)
   "Post update process for PACKAGE.
-Touch files that contain \"(bundle PACKAGE ...)\" so that the
+Touch files that contain \"(el-get-bundle PACKAGE ...)\" so that the
 file becomes newer than its byte-compiled version."
-  (dolist (file (cdr (assoc-string package bundle-loader-alist)))
+  (dolist (file (cdr (assoc-string package el-get-bundle-loader-alist)))
     (when (and file (file-exists-p file))
       (call-process "touch" nil nil nil file)))
-  (when bundle-updates
-    (setq bundle-updates (delq package bundle-updates))
-    (when (and (null bundle-updates) bundle-reload-user-init-file)
-      (setq bundle-inits nil bundle-loader-alist nil)
+  (when el-get-bundle-updates
+    (setq el-get-bundle-updates (delq package el-get-bundle-updates))
+    (when (and (null el-get-bundle-updates) el-get-bundle-reload-user-init-file)
+      (setq el-get-bundle-inits nil el-get-bundle-loader-alist nil)
       (when (stringp user-init-file)
         (load user-init-file)
         (run-hooks 'after-init-hook)))))
-(add-hook 'el-get-post-update-hooks #'bundle-post-update)
+(add-hook 'el-get-post-update-hooks #'el-get-bundle-post-update)
 
 ;; commands
 
 ;;;###autoload
-(defmacro bundle (feature &rest form)
+(defmacro el-get-bundle (feature &rest form)
   "Install FEATURE and run init script specified by FORM.
 
 FORM may be started with a property list. In that case, the
@@ -272,22 +262,22 @@ property list is pushed to `el-get-sources'.
 The rest of FORM is evaluated after FEATURE is loaded."
   (declare (indent defun) (debug t))
   (let* ((feature (or (and (listp feature) (nth 1 feature)) feature))
-         (src (bundle-parse-name feature)) require)
+         (src (el-get-bundle-parse-name feature)) require)
     ;; set parsed name
     (setq feature (plist-get src :name))
-    ;; (bundle FEATURE in PACKAGE ...) form
+    ;; (el-get-bundle FEATURE in PACKAGE ...) form
     (when (eq (nth 0 form) 'in)
       (let* ((name (nth 1 form))
              (name (or (and (listp name) (nth 1 name)) name)))
-        (setq src (bundle-parse-name name)))
+        (setq src (el-get-bundle-parse-name name)))
       (setq form (nthcdr 2 form) require t))
     ;; parse keywords
     (while (keywordp (nth 0 form))
       (setq src (plist-put src (nth 0 form) (nth 1 form))
             form (cdr-safe (cdr form))))
     ;; put default type
-    (unless (or (plist-member src :type) (bundle-defined-p src))
-      (setq src (plist-put src :type (bundle-guess-type src))))
+    (unless (or (plist-member src :type) (el-get-bundle-defined-p src))
+      (setq src (plist-put src :type (el-get-bundle-guess-type src))))
     ;; features
     (when (plist-member src :features)
       (let* ((fs (plist-get src :features))
@@ -302,51 +292,53 @@ The rest of FORM is evaluated after FEATURE is loaded."
     ;; init script
     (setq src (plist-put src :after form))
 
-    `(bundle-el-get ',src)))
+    `(el-get-bundle-el-get ',src)))
 
 ;;;###autoload
-(defmacro bundle! (feature &rest args)
+(defmacro el-get-bundle! (feature &rest args)
   "Install FEATURE and run init script.
-It is the same as `bundle' except that FEATURE is explicitly
+It is the same as `el-get-bundle' except that FEATURE is explicitly
 required."
   (declare (indent defun) (debug t))
   (if (eq (nth 0 args) 'in)
-      `(bundle ,feature ,@args)
+      `(el-get-bundle ,feature ,@args)
     (let* ((feature (or (and (listp feature) (nth 1 feature)) feature))
-           (name (plist-get (bundle-parse-name feature) :name)))
-      `(bundle ,name ,@(list* 'in feature args)))))
+           (name (plist-get (el-get-bundle-parse-name feature) :name)))
+      `(el-get-bundle ,name ,@(list* 'in feature args)))))
 
 ;;;###autoload
-(defun bundle-update (&rest packages)
+(defun el-get-bundle-update (&rest packages)
   "Update PACKAGES.
 If PACKAGES is nil, then update all installed packages.  If
-`bundle-reload-user-init-file' is non-nil, then `user-init-file'
+`el-get-bundle-reload-user-init-file' is non-nil, then `user-init-file'
 is reloaded after all the updates."
   (interactive "SPackage: ")
-  (setq bundle-updates packages)
+  (setq el-get-bundle-updates packages)
   (if packages
       (mapc #'el-get-update packages)
-    (setq bundle-updates (el-get-list-package-names-with-status "installed"))
+    (setq el-get-bundle-updates
+          (el-get-list-package-names-with-status "installed"))
     (el-get-update-all t)))
 
 ;;;###autoload
-(defun bundle-update-all ()
+(defun el-get-bundle-update-all ()
   "Update all installed packages.
-If `bundle-reload-user-init-file' is non-nil, then
+If `el-get-bundle-reload-user-init-file' is non-nil, then
 `user-init-file' is reloaded after all the updates."
   (interactive)
-  (bundle-update))
+  (el-get-bundle-update))
 
 ;;;###autoload
-(defun bundle-register-callsite (package &optional callsite)
+(defun el-get-bundle-register-callsite (package &optional callsite)
   "Declare that PACKAGE update causes CALLSITE to require being loaded again."
-  (let* ((pair (or (assoc package bundle-loader-alist) (cons package nil)))
+  (let* ((pair (or (assoc package el-get-bundle-loader-alist)
+                   (cons package nil)))
          (loaders (cdr pair))
-         (loader (bundle-load-file-el callsite)))
+         (loader (el-get-bundle-load-file-el callsite)))
     (when (and loader (file-exists-p loader))
       (add-to-list 'loaders loader))
     (setcdr pair loaders)
-    (add-to-list 'bundle-loader-alist pair)))
+    (add-to-list 'el-get-bundle-loader-alist pair)))
 
-(provide 'bundle)
-;;; bundle.el ends here
+(provide 'el-get-bundle)
+;;; el-get-bundle.el ends here
