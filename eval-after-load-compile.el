@@ -1,7 +1,7 @@
 ;;; eval-after-load-compile.el --- Compiling version of eval-after-load
 
 ;; Author: INA Lintaro <tarao.gnn at gmail.com>
-;; URL: https://gist.github.com/4414304.git
+;; URL: https://github.com/tarao/bundle-el
 ;; Version: 0.1
 ;; Keywords: emacs compile
 
@@ -24,27 +24,17 @@
 
 ;;; Code:
 
-(eval '(eval-when-compile (require 'cl)))
+(let ((el-get-root-dir
+       (file-name-as-directory
+        (or (bound-and-true-p el-get-dir)
+            (file-name-directory
+             (directory-file-name
+              (file-name-directory load-file-name)))))))
+  (add-to-list 'load-path (expand-file-name "el-get" el-get-root-dir)))
+(require 'el-get-eval-after-load-compile)
 
 ;;;###autoload
-(defmacro eval-after-load-compile (feature &rest form)
-  (declare (indent defun))
-  (let ((feat (if (and (listp feature) (eq (nth 0 feature) 'quote))
-                  (nth 1 feature) feature)) loaded)
-    (eval '(eval-when (compile)
-             (setq loaded
-                   (condition-case ()
-                       ;; don't eval after-loads during compilation
-                       (let ((after-load-alist nil))
-                         (cond ((stringp feat) (load feat))
-                               ((symbolp feat) (require feat))))
-                     (error nil)))))
-    (if loaded
-        ;; byte-compiled version
-        `(eval-after-load ,feature
-           '(funcall ,(byte-compile `(lambda () ,@form))))
-      ;; normal version
-      `(eval-after-load ,feature '(progn ,@form)))))
+(defalias 'eval-after-load-compile 'el-get-eval-after-load-compile)
 
 (provide 'eval-after-load-compile)
 ;;; eval-after-load-compile.el ends here
