@@ -1,6 +1,6 @@
-# el-get-bundle.el --- an [el-get][] wrapper
+# el-get-bundle.el --- an El-Get wrapper
 
-* Wrap [el-get][] with easy syntax.
+* Wrap El-Get with easy syntax.
   * Avoiding long lines of el-get recipes.
 * A package requirement and its configuration are put at the same
   place in your Emacs init file.
@@ -76,7 +76,7 @@ If you want to override a package source definition or define a new
 definition, you can pass keyword list after the package name.
 
 For example, if you want to install `zenburn-theme` but want to use
-other version than el-get's default recipe, you can reuse the default
+other version than El-Get's default recipe, you can reuse the default
 recipe with overriding `:url` option.
 ```lisp
 (el-get-bundle zenburn-theme
