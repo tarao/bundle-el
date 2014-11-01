@@ -1,7 +1,7 @@
 ;;; el-get-eval-after-load-compile.el --- Compiling version of eval-after-load
 
 ;; Author: INA Lintaro <tarao.gnn at gmail.com>
-;; URL: https://gist.github.com/4414304.git
+;; URL: https://github.com/tarao/bundle-el/tree/el-get
 ;; Version: 0.1
 ;; Keywords: emacs compile
 

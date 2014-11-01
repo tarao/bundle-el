@@ -1,7 +1,7 @@
 ;;; el-get-bundle.el --- An el-get wrapper
 
 ;; Author: INA Lintaro <tarao.gnn at gmail.com>
-;; URL: https://gist.github.com/4414297
+;; URL: https://github.com/tarao/bundle-el/tree/el-get
 ;; Version: 0.1
 ;; Keywords: emacs package install compile
 
