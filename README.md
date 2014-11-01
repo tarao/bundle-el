@@ -244,8 +244,17 @@ modifiers.
 
 ## Acknowledgment
 
+### About `eval-after-load-compile`
+
 The technique of byte-compiling version of `eval-after-load` is taken
 from [eval-after-load-q][].
+
+### About `el-get-bundle`
+
+The [original implementation]() of this package is merged to
+[el-get][]. While the merged versions are renamed to `el-get-bundle*`,
+this package provides the original interface (`bundle*`), which are
+just aliases to the merged versions.
 
 [el-get]: http://github.com/dimitri/el-get
 [eval-after-load-q]: http://hke7.wordpress.com/2012/02/28/eval-after-load-%e3%82%92%e5%b0%91%e3%81%97%e6%94%b9%e9%80%a0/
