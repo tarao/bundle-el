@@ -41,34 +41,31 @@ configurations).  The configurations are saved to a file in
 
 Note that you should not call functions or refer to variables defined
 in the package if the package is going to be autoloaded.  In such
-case, you should use `eval-after-load` function.
+case, you should use `with-eval-after-load` macro.
 ```lisp
 (el-get-bundle anything
-  (global-set-key (kbd "C-x b") #'anything-for-files)
-  (eval-after-load 'anything
-    '(progn
-       ;; referring to `anything-map' requires "anything.el" to be loaded
-       (define-key anything-map (kbd "M-n") #'anything-next-source)
-       (define-key anything-map (kbd "M-p") #'anything-previous-source))))
+  (global-set-key (kbd "C-x b") #'anything-for-files))
+(with-eval-after-load 'anything
+  ;; referring to `anything-map' requires "anything.el" to be loaded
+  (define-key anything-map (kbd "M-n") #'anything-next-source)
+  (define-key anything-map (kbd "M-p") #'anything-previous-source))
 ```
 
-If you want the form passed to `eval-after-load` to be compiled, use
-`el-get-eval-after-load-compile` macro instead.
+If you want the form passed to `with-eval-after-load` to be compiled
+together with the configurations, you can use
+[tarao's `with-eval-after-load-feature`][with-eval-after-load-feature]
+instead or you will get "reference to free variable" warnings during
+the compilation.
 ```lisp
+(el-get-bundle! with-eval-after-load-feature
+                :url "http://github.com/tarao/with-eval-after-load-feature-el.git")
 (el-get-bundle anything
   (global-set-key (kbd "C-x b") #'anything-for-files)
-  (el-get-eval-after-load-compile 'anything
+  (with-eval-after-load-feature 'anything
     ;; referring to `anything-map' requires "anything.el" to be loaded
     (define-key anything-map (kbd "M-n") #'anything-next-source)
     (define-key anything-map (kbd "M-p") #'anything-previous-source)))
 ```
-
-Unlike `eval-after-load`, you don't have to quote the configuration
-form in `el-get-eval-after-load-compile`.  When `el-get-eval-after-load-compile`
-macro call is compiled, the package is loaded only for that time to
-make sure that functions and variables in the package are defined.
-Don't put anything which should not be in a function body because the
-form is compiled as a function body.
 
 ### Pass options to package source definitions
 
@@ -177,23 +174,6 @@ modifiers.
   configuration *form*.  It is equivalent to `el-get-bundle` except that it
   `require`s the *package*.
 
-- `el-get-eval-after-load-compile` ( *package* *form*... )
-
-  Arrange that if *package* is loaded, *form* will be run immediately
-  afterwards.  This is equivalent to `eval-after-load` except two
-  differences:
-  * You don't have to quote *form*.
-  * *form* is compiled when `el-get-eval-after-load-compile` macro is compiled.
-
-  *form* is compiled as a function body by the following code.
-  ```lisp
-  (byte-compile `(lambda () ,@form))
-  ```
-
-  When `el-get-eval-after-load-compile` macro call is compiled, the *package*
-  is loaded only for that time to make sure that functions and variables
-  in the *package* are defined.
-
 ### Commands
 
 - `el-get-bundle-update` ( *package*... )
@@ -223,9 +203,4 @@ modifiers.
   use this function if you want to recompile your configuration when
   some other package installed in some other file is updated.
 
-### Acknowledgment
-
-The technique of byte-compiling version of `eval-after-load` is taken
-from [eval-after-load-q][].
-
-[eval-after-load-q]: http://hke7.wordpress.com/2012/02/28/eval-after-load-%e3%82%92%e5%b0%91%e3%81%97%e6%94%b9%e9%80%a0/
+[with-eval-after-load-feature]: http://github.com/tarao/with-eval-after-load-feature-el
