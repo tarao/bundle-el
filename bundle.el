@@ -58,18 +58,6 @@ of this variable, set `el-get-bundle-init-directory' instead."
   :type 'directory
   :group 'bundle)
 
-(defcustom bundle-reload-user-init-file t
-  "Reload `user-init-file' when a package is updated.
-
-This variable is just an alias. If you want to modify the value
-of this variable, set `el-get-bundle-reload-user-init-file'
-instead."
-  :set #'(lambda (sym value)
-           (set-default 'el-get-bundle-reload-user-init-file value)
-           (set-default sym value))
-  :type 'boolean
-  :group 'bundle)
-
 ;;;###autoload
 (defalias 'bundle 'el-get-bundle)
 
@@ -77,13 +65,7 @@ instead."
 (defalias 'bundle! 'el-get-bundle!)
 
 ;;;###autoload
-(defalias 'bundle-update 'el-get-bundle-update)
-
-;;;###autoload
-(defalias 'bundle-update-all 'el-get-bundle-update-all)
-
-;;;###autoload
-(defalias 'bundle-register-callsite 'el-get-bundle-register-callsite)
+(defalias 'bundle-reload 'el-get-bundle-reload)
 
 (provide 'bundle)
 ;;; bundle.el ends here
