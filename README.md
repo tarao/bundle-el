@@ -145,14 +145,6 @@ modifiers.
 
   The default value is `~/.emacs.d/el-get-/bundle-init/`.
 
-- `el-get-bundle-reload-user-init-file` : boolean
-
-  `t` means to reload `user-init-file` (such as `~/.emacs` or
-  `~/.emacs.d/init.el`) when a package is updated by `el-get-bundle-update` or
-  `el-get-bundle-update-all`.
-
-  The default value is `t`.
-
 ### Macros
 
 - `el-get-bundle` ( *package* [ *keywords* ] [ *form*... ] )
@@ -176,31 +168,9 @@ modifiers.
 
 ### Commands
 
-- `el-get-bundle-update` ( *package*... )
+- `el-get-bundle-reload` ( )
 
-  Update *package*.  If `el-get-bundle-reload-user-init-file` is `t`,
-  `user-init-file` (such as `~/.emacs` or `~/.emacs.d/init.el`) is
-  reloaded after the *package* update.
-
-- `el-get-bundle-update-all` ( )
-
-  Update all installed packages.  If `el-get-bundle-reload-user-init-file` is
-  `t`, `user-init-file` (such as `~/.emacs` or `~/.emacs.d/init.el`) is
-  reloaded after all package updates.
-
-### Functions
-
-- `el-get-bundle-register-callsite` ( *package* [ *callsite* ] )
-
-  Declare that *package* update causes *callsite* (a file) to require
-  being loaded again.
-
-  This **DOES NOT** mean that `el-get-bundle-update` reload the *callsite* but
-  configuration forms in the *callsite* will be recompiled next time
-  they are evaluated.
-
-  The registration is automatically done in `el-get-bundle` macro.  You have to
-  use this function if you want to recompile your configuration when
-  some other package installed in some other file is updated.
+  Reload `user-init-file` (such as `~/.emacs` or `~/.emacs.d/init.el`)
+  with maintaining information of `el-get-bundle` configurations.
 
 [with-eval-after-load-feature]: http://github.com/tarao/with-eval-after-load-feature-el
