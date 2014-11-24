@@ -164,14 +164,6 @@ modifiers.
 
   The default value is `~/.emacs.d/bundle/init/`.
 
-- `bundle-reload-user-init-file` : boolean
-
-  `t` means to reload `user-init-file` (such as `~/.emacs` or
-  `~/.emacs.d/init.el`) when a package is updated by `bundle-update` or
-  `bundle-update-all`.
-
-  The default value is `t`.
-
 ### Macros
 
 - `bundle` ( *package* [ *keywords* ] [ *form*... ] )
@@ -195,32 +187,10 @@ modifiers.
 
 ### Commands
 
-- `bundle-update` ( *package*... )
+- `bundle-reload` ( )
 
-  Update *package*.  If `bundle-reload-user-init-file` is `t`,
-  `user-init-file` (such as `~/.emacs` or `~/.emacs.d/init.el`) is
-  reloaded after the *package* update.
-
-- `bundle-update-all` ( )
-
-  Update all installed packages.  If `bundle-reload-user-init-file` is
-  `t`, `user-init-file` (such as `~/.emacs` or `~/.emacs.d/init.el`) is
-  reloaded after all package updates.
-
-### Functions
-
-- `bundle-register-callsite` ( *package* [ *callsite* ] )
-
-  Declare that *package* update causes *callsite* (a file) to require
-  being loaded again.
-
-  This **DOES NOT** mean that `bundle-update` reload the *callsite* but
-  configuration forms in the *callsite* will be recompiled next time
-  they are evaluated.
-
-  The registration is automatically done in `bundle` macro.  You have to
-  use this function if you want to recompile your configuration when
-  some other package installed in some other file is updated.
+  Reload `user-init-file` (such as `~/.emacs` or `~/.emacs.d/init.el`)
+  with maintaining information of `bundle` configurations.
 
 ## Acknowledgment
 
