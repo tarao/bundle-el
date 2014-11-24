@@ -43,6 +43,12 @@ If you also want to `require` the package, use `bundle!` macro.
 (bundle! color-moccur)
 ```
 
+When the name of the feature you require is different from the package
+name (the recipe name), use `FEATURE in PACKAGE` form.
+```lisp
+(bundle! yaicomplete in github:tarao/elisp)
+```
+
 ### Install some package and configure it
 
 You can write configurations after the package name.
