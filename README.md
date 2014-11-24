@@ -26,6 +26,12 @@ If you also want to `require` the package, use `el-get-bundle!` macro.
 (el-get-bundle! color-moccur)
 ```
 
+When the name of the feature you require is different from the package
+name (the recipe name), use `FEATURE in PACKAGE` form.
+```lisp
+(el-get-bundle! yaicomplete in github:tarao/elisp)
+```
+
 ### Install some package and configure it
 
 You can write configurations after the package name.
@@ -160,11 +166,15 @@ modifiers.
   `el-get-bundle-byte-compile` is `t`, the *form* is saved to a file in
   `el-get-bundle-init-directory` and compiled.
 
-- `el-get-bundle!` ( *package* [ *keywords* ] [ *form*... ] )
+- `el-get-bundle!` ( [*feature* in] *package* [ *keywords* ] [ *form*... ] )
 
   Install and `require` *package* with options *keywords* and run
   configuration *form*.  It is equivalent to `el-get-bundle` except that it
   `require`s the *package*.
+
+  If *feature* followed by `in` is specified, then *feature* is
+  `require`d even though the target of package installation is
+  *package*.
 
 ### Commands
 
