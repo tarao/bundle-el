@@ -64,8 +64,5 @@ of this variable, set `el-get-bundle-init-directory' instead."
 ;;;###autoload
 (defalias 'bundle! 'el-get-bundle!)
 
-;;;###autoload
-(defalias 'bundle-reload 'el-get-bundle-reload)
-
 (provide 'bundle)
 ;;; bundle.el ends here

@@ -191,13 +191,6 @@ modifiers.
   configuration *form*.  It is equivalent to `bundle` except that it
   `require`s the *package*.
 
-### Commands
-
-- `bundle-reload` ( )
-
-  Reload `user-init-file` (such as `~/.emacs` or `~/.emacs.d/init.el`)
-  with maintaining information of `bundle` configurations.
-
 ## Acknowledgment
 
 The [original implementation][original] of this package is merged to
