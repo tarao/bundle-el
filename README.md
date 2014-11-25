@@ -176,11 +176,4 @@ modifiers.
   `require`d even though the target of package installation is
   *package*.
 
-### Commands
-
-- `el-get-bundle-reload` ( )
-
-  Reload `user-init-file` (such as `~/.emacs` or `~/.emacs.d/init.el`)
-  with maintaining information of `el-get-bundle` configurations.
-
 [with-eval-after-load-feature]: http://github.com/tarao/with-eval-after-load-feature-el
