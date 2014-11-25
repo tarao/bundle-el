@@ -149,7 +149,7 @@ modifiers.
 
   Directory to save auto generated files for configurations.
 
-  The default value is `~/.emacs.d/el-get-/bundle-init/`.
+  The default value is `~/.emacs.d/el-get/bundle-init/`.
 
 ### Macros
 
