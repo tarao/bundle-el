@@ -13,12 +13,11 @@
 ```lisp
 (add-to-list 'load-path (locate-user-emacs-file "el-get/bundle"))
 (unless (require 'bundle nil 'noerror)
-  (let (el-get-master-branch)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "http://raw.github.com/tarao/bundle-el/master/bundle-install.el")
-      (goto-char (point-max))
-      (eval-print-last-sexp))))
+  (with-current-buffer
+      (url-retrieve-synchronously
+       "http://raw.github.com/tarao/bundle-el/master/bundle-install.el")
+    (goto-char (point-max))
+    (eval-print-last-sexp)))
 ```
 
 ## Case Studies
