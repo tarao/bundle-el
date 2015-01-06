@@ -1,43 +1,33 @@
-# bundle.el --- an [el-get][] wrapper
+# bundle.el --- an [El-Get][] wrapper
 
-## Features
-
-* Wrap [el-get][] with easy syntax.
-  * Avoiding long lines of el-get recipes.
-* A package requirement and its configuration are put at the same
+* Wrap [El-Get][] with easy syntax.
+  * Avoiding long lines of El-Get recipes.
+* A package requirement and its initialization code are put at the same
   place in your Emacs init file.
-* Configurations are automatically byte-compiled when they are loaded
-  for the first time.
+* Initialization code is automatically byte-compiled when they are
+  evaluated for the first time.
   * This gives you a chance to find errors in your configuration.
 
 ## Installation
 
-1. Install [el-get][]
-2. Install bundle.el by el-get
-
 ```lisp
-;; Install el-get as usual
-(add-to-list 'load-path "~/.emacs.d/el-get/el-get")
-(unless (require 'el-get nil 'noerror)
-  (with-current-buffer
-      (url-retrieve-synchronously
-       "http://raw.github.com/dimitri/el-get/master/el-get-install.el")
-    (let (el-get-master-branch)
+(add-to-list 'load-path (locate-user-emacs-file "el-get/bundle"))
+(unless (require 'bundle nil 'noerror)
+  (let (el-get-master-branch)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "http://raw.github.com/tarao/bundle-el/master/bundle-install.el")
       (goto-char (point-max))
       (eval-print-last-sexp))))
-
-;; Install bundle
-(add-to-list 'el-get-sources
-             '(:name bundle :type github :pkgname "tarao/bundle-el"))
-(el-get 'sync 'bundle)
 ```
 
 ## Case Studies
 
 ### Just install some package
 
-To install a package whose recipe is already defined, use `bundle`
-macro with the package name in your init file.
+To install a package whose source is already defined in a recipe file,
+use `bundle` macro with the package name.
+
 ```lisp
 (bundle color-moccur)
 ```
@@ -52,57 +42,67 @@ If you also want to `require` the package, use `bundle!` macro.
 (bundle! color-moccur)
 ```
 
+When the name of the feature you require is different from the package
+name (the recipe name), use `FEATURE in PACKAGE` form.
+```lisp
+(bundle! yaicomplete in github:tarao/elisp)
+```
+
 ### Install some package and configure it
 
-You can write configurations after the package name.
+You can write initialization code after the package name.
 ```lisp
 (bundle anything
   (global-set-key (kbd "C-x b") #'anything-for-files))
 ```
 
-Configurations are automatically compiled when they are evaluated for
-the first time (after you modified the file enclosing the
-configurations).  The configurations are saved to a file in
-`bundle-init-directory` together with a compiled version.
+You can provide multiple initialization code for a single package by
+writing `bundle` macro call may times. Each initialization code
+is evaluated when the corresponding `bundle` macro call is
+evaluated.
+
+Initialization code is automatically compiled when they are evaluated
+for the first time (after you modified the file enclosing the code) if
+`bundle-byte-compile` is non-nil.  The initialization code is
+saved to a file in `bundle-init-directory` together with a
+compiled version.
 
 Note that you should not call functions or refer to variables defined
 in the package if the package is going to be autoloaded.  In such
-case, you should use `eval-after-load` function.
+case, you should use `with-eval-after-load` macro.
 ```lisp
 (bundle anything
-  (global-set-key (kbd "C-x b") #'anything-for-files)
-  (eval-after-load 'anything
-    '(progn
-       ;; referring to `anything-map' requires "anything.el" to be loaded
-       (define-key anything-map (kbd "M-n") #'anything-next-source)
-       (define-key anything-map (kbd "M-p") #'anything-previous-source))))
+  (global-set-key (kbd "C-x b") #'anything-for-files))
+(with-eval-after-load 'anything
+  ;; referring to `anything-map' requires "anything.el" to be loaded
+  (define-key anything-map (kbd "M-n") #'anything-next-source)
+  (define-key anything-map (kbd "M-p") #'anything-previous-source))
 ```
 
-If you want the form passed to `eval-after-load` to be compiled, use
-`eval-after-load-compile` macro instead.
+If you want the form passed to `with-eval-after-load` to be compiled
+together with the initialization code, you can use
+[tarao's `with-eval-after-load-feature`][with-eval-after-load-feature]
+instead or you will get "reference to free variable" warnings during
+the compilation.
 ```lisp
+(bundle! with-eval-after-load-feature
+                :url "http://github.com/tarao/with-eval-after-load-feature-el.git")
 (bundle anything
   (global-set-key (kbd "C-x b") #'anything-for-files)
-  (eval-after-load-compile 'anything
+  (with-eval-after-load-feature 'anything
     ;; referring to `anything-map' requires "anything.el" to be loaded
     (define-key anything-map (kbd "M-n") #'anything-next-source)
     (define-key anything-map (kbd "M-p") #'anything-previous-source)))
 ```
 
-Unlike `eval-after-load`, you don't have to quote the configuration
-form in `eval-after-load-compile`.  When `eval-after-load-compile`
-macro call is compiled, the package is loaded only for that time to
-make sure that functions and variables in the package are defined.
-Don't put anything which should not be in a function body because the
-form is compiled as a function body.
-
 ### Pass options to package source definitions
 
-If you want to override a package source definition or define a new
-definition, you can pass keyword list after the package name.
+If you want to override a package source definition in a recipe file
+or define a new definition, you can pass a property list after the
+package name.
 
 For example, if you want to install `zenburn-theme` but want to use
-other version than el-get's default recipe, you can reuse the default
+other version than El-Get's default recipe, you can reuse the default
 recipe with overriding `:url` option.
 ```lisp
 (bundle zenburn-theme
@@ -118,9 +118,9 @@ If you want to define a new package source, then supply full options.
   :website "http://d.hatena.ne.jp/mooz/20101003/p1")
 ```
 
-The keyword `:type` is required if the package source is already
+The property `:type` is required if the package source is already
 defined but you don't reuse it.  Otherwise, if the package source is
-not defined yet, you can omit `:type` keyword as long as it can be
+not defined yet, you can omit `:type` property as long as it can be
 guessed from `:url`.
 ```lisp
 (bundle! zlc :url "http://github.com/mooz/emacs-zlc.git")
@@ -131,7 +131,7 @@ guessed from `:url`.
 ### Syntax sugars for package source definitions
 
 There are some ways to specify package source options by package name
-modifiers.
+modifiers.  With these modifiers, you can omit `:type` property.
 
 `<owner>/` modifier
 : specifies a github owner name
@@ -160,101 +160,49 @@ modifiers.
 
 ### Customization
 
-#### `bundle-byte-compile` : boolean
+- `bundle-byte-compile` : boolean
 
-`t` means to automatically byte-compile configuration forms.
+  Whether to compile initialization code in a `bundle` macro
+  call.  Defaults to `t`.
 
-Unless this option is set to `t`, nothing is saved to
-`bundle-init-directory` and configuration forms are passed as
-`:after` script of the package source definition.
+- `bundle-init-directory` : directory
 
-The default value is `t`.
-
-#### `bundle-init-directory` : directory
-
-Directory to save auto generated files for configurations.
-
-The default value is `~/.emacs.d/bundle/init/`.
-
-#### `bundle-reload-user-init-file` : boolean
-
-`t` means to reload `user-init-file` (such as `~/.emacs` or
-`~/.emacs.d/init.el`) when a package is updated by `bundle-update` or
-`bundle-update-all`.
-
-The default value is `t`.
+  Directory where a copy of initialization code specified in a
+  `bundle` macro call and its byte-compiled version are saved.
+  Defaults to `~/.emacs.d/el-get/bundle-init/`.
 
 ### Macros
 
-#### `bundle` ( *package* [ *keywords* ] [ *form*... ] )
+- `bundle` ( *package* [ *keywords* ] [ *form*... ] )
 
-Install *package* with options *keywords* and run configuration
-*form*.
+  Install *package* with options *keywords* and run configuration
+  *form*.
 
-*keywords* are elements of a property list whose keys are symbols
-whose names start with `:`.  See the documentation of `el-get-sources`
-for the meanings of the keys.
+  *keywords* are elements of a property list whose keys are symbols
+  whose names start with `:`.  See the documentation of `el-get-sources`
+  for the meanings of the keys.
 
-After the *package* is installed, the *form* is evaluated.  When
-`bundle-byte-compile` is `t`, the *form* is saved to a file in
-`bundle-init-directory` and compiled.
+  After the *package* is installed, the *form* is evaluated.  When
+  `bundle-byte-compile` is `t`, the *form* is saved to a file in
+  `bundle-init-directory` and compiled.
 
-#### `bundle!` ( *package* [ *keywords* ] [ *form*... ] )
+- `bundle!` ( [*feature* in] *package* [ *keywords* ] [ *form*... ] )
 
-Install and `require` *package* with options *keywords* and run
-configuration *form*.  It is equivalent to `bundle` except that it
-`require`s the *package*.
+  Install and `require` *package* with options *keywords* and run
+  configuration *form*.  It is equivalent to `bundle` except that it
+  `require`s the *package*.
 
-#### `eval-after-load-compile` ( *package* *form*... )
-
-Arrange that if *package* is loaded, *form* will be run immediately
-afterwards.  This is equivalent to `eval-after-load` except two
-differences:
-* You don't have to quote *form*.
-* *form* is compiled when `eval-after-load-compile` macro is compiled.
-
-*form* is compiled as a function body by the following code.
-```lisp
-(byte-compile `(lambda () ,@form))
-```
-
-When `eval-after-load-compile` macro call is compiled, the *package*
-is loaded only for that time to make sure that functions and variables
-in the *package* are defined.
-
-### Commands
-
-#### `bundle-update` ( *package*... )
-
-Update *package*.  If `bundle-reload-user-init-file` is `t`,
-`user-init-file` (such as `~/.emacs` or `~/.emacs.d/init.el`) is
-reloaded after the *package* update.
-
-#### `bundle-update-all` ( )
-
-Update all installed packages.  If `bundle-reload-user-init-file` is
-`t`, `user-init-file` (such as `~/.emacs` or `~/.emacs.d/init.el`) is
-reloaded after all package updates.
-
-### Functions
-
-#### `bundle-register-callsite` ( *package* [ *callsite* ] )
-
-Declare that *package* update causes *callsite* (a file) to require
-being loaded again.
-
-This **DOES NOT** mean that `bundle-update` reload the *callsite* but
-configuration forms in the *callsite* will be recompiled next time
-they are evaluated.
-
-The registration is automatically done in `bundle` macro.  You have to
-use this function if you want to recompile your configuration when
-some other package installed in some other file is updated.
+  If *feature* followed by `in` is specified, then *feature* is
+  `require`d even though the target of package installation is
+  *package*.
 
 ## Acknowledgment
 
-The technique of byte-compiling version of `eval-after-load` is taken
-from [eval-after-load-q][].
+The [original implementation][original] of this package is merged to
+[El-Get][]. While the merged versions are renamed to `el-get-bundle*`,
+this package provides the original interface (`bundle*`), which are
+just aliases to the merged versions.
 
-[el-get]: http://github.com/dimitri/el-get
-[eval-after-load-q]: http://hke7.wordpress.com/2012/02/28/eval-after-load-%e3%82%92%e5%b0%91%e3%81%97%e6%94%b9%e9%80%a0/
+[El-Get]: http://github.com/dimitri/el-get
+[original]: https://github.com/tarao/bundle-el/tree/original
+[with-eval-after-load-feature]: http://github.com/tarao/with-eval-after-load-feature-el
