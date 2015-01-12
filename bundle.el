@@ -33,6 +33,11 @@
   (add-to-list 'load-path (expand-file-name "el-get" el-get-root-dir)))
 (require 'el-get)
 
+;; Ensure that the recipe is defined
+(unless (ignore-errors (el-get-package-def "bundle"))
+  (add-to-list 'el-get-sources
+               '(:name bundle :type github :pkgname "tarao/bundle-el")))
+
 (defgroup bundle nil "bundle"
   :group 'convenience)
 
